@@ -1,14 +1,4 @@
 # =========================
-# Frontend
-# =========================
-
-Frontend/node_modules/
-Frontend/dist/
-Frontend/.env
-Frontend/.env.local
-
-
-# =========================
 # Backend
 # =========================
 
@@ -16,7 +6,20 @@ Backend/venv/
 Backend/.venv/
 Backend/__pycache__/
 Backend/**/*.pyc
+Backend/*.db
+Backend/*.sqlite
+Backend/*.sqlite3
 Backend/.env
+
+
+# =========================
+# Frontend
+# =========================
+
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env
+Frontend/.env.local
 
 
 # =========================
