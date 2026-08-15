@@ -54,3 +54,11 @@ __pycache__/
 
 .DS_Store
 Thumbs.db
+
+# =========================
+# Data
+# =========================
+data/
+
+# Air quality dataset
+delhi_cpcb_hourly*
