@@ -14,10 +14,12 @@ import {
   SunMedium,
   ShieldCheck
 } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext.jsx";
 import delhiGateBg from "../assets/delhi-gate.jpg";
 
 function Login() {
   const navigate = useNavigate();
+  const { t, toggleLanguage, language } = useLanguage();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -74,33 +76,44 @@ function Login() {
     >
       <div className="vp-auth-overlay" />
 
+      {/* Glassmorphic Top Auth Header */}
+      <header className="vp-auth-header">
+        <div className="vp-auth-header-brand">
+          <div className="vp-auth-header-icon">
+            <Wind size={18} />
+          </div>
+          <span className="vp-auth-header-title">{t('logoTitle')}</span>
+        </div>
+        <div className="vp-auth-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <button className="vp-lang-toggle" onClick={toggleLanguage} title="Change Language / भाषा बदलें">
+            {language === 'en' ? 'हिन्दी' : 'English'}
+          </button>
+          <div className="vp-auth-header-status">
+            <span className="vp-status-dot" />
+            <span>{t('sysStatus')}</span>
+          </div>
+        </div>
+      </header>
+
       <div className="vp-auth-container">
         {/* LEFT COLUMN: HERO MARKETING */}
         <div className="vp-left-col">
-          {/* Brand Badge */}
-          <div className="vp-brand-pill">
-            <div className="vp-brand-icon">
-              <Wind size={18} color="#0c2c17" />
-            </div>
-            <span className="vp-brand-text">Air Quality Prediction</span>
-          </div>
 
           {/* Hero Titles */}
           <div className="vp-hero-text">
             <h1>
-              Cleaner Air.<br />
-              Smarter Routes.<br />
-              <span className="vp-green-accent">Better Living.</span>
+              {t('loginHeroTitle1')}<br />
+              <span className="vp-green-accent">{t('loginHeroTitle2')}</span>
             </h1>
             <p>
-              Real-time air quality insights, AI-driven risk alerts, and exposure-optimized routes.
+              {t('loginHeroDesc')}
             </p>
           </div>
 
           {/* AQI Glass Card */}
           <div className="vp-aqi-card">
             <div className="vp-aqi-header">
-              <span className="vp-aqi-tag">LIVE AQI</span>
+              <span className="vp-aqi-tag">{t('liveAqiTag')}</span>
               <div className="vp-weather-pill">
                 <SunMedium size={14} />
                 <span>31°C</span>
@@ -110,32 +123,47 @@ function Login() {
             <div className="vp-aqi-body">
               <span className="vp-aqi-val">128</span>
               <div className="vp-aqi-info">
-                <strong>Moderate Risk</strong>
-                <span>Sensitive groups take caution</span>
+                <strong>{t('modRisk')}</strong>
+                <span>{t('sensCaution')}</span>
               </div>
             </div>
 
             <div className="vp-aqi-footer">
               <MapPin size={12} />
-              <span>Connaught Place, Central Station</span>
+              <span>{t('cpStation')}</span>
             </div>
           </div>
 
-          {/* Bottom Dock */}
-          <div className="vp-bottom-dock">
-            <div className="vp-dock-item">
-              <Sparkles size={14} color="#4ade80" />
-              <span>Real-Time Sensing</span>
+          {/* Core Capabilities Stack */}
+          <div className="vp-feature-card-stack">
+            <div className="vp-white-pill-card">
+              <div className="vp-pill-icon-circle">
+                <Sparkles size={16} />
+              </div>
+              <div className="vp-pill-card-text">
+                <strong>{t('featAiTitle')}</strong>
+                <p>{t('featAiDesc')}</p>
+              </div>
             </div>
-            <div className="vp-dock-sep" />
-            <div className="vp-dock-item">
-              <TrendingUp size={14} color="#4ade80" />
-              <span>AI Predictions</span>
+            
+            <div className="vp-white-pill-card">
+              <div className="vp-pill-icon-circle">
+                <Navigation size={16} />
+              </div>
+              <div className="vp-pill-card-text">
+                <strong>{t('featRouteTitle')}</strong>
+                <p>{t('featRouteDesc')}</p>
+              </div>
             </div>
-            <div className="vp-dock-sep" />
-            <div className="vp-dock-item">
-              <Navigation size={14} color="#4ade80" />
-              <span>Safer Routes</span>
+
+            <div className="vp-white-pill-card">
+              <div className="vp-pill-icon-circle">
+                <ShieldCheck size={16} />
+              </div>
+              <div className="vp-pill-card-text">
+                <strong>{t('featAlertsTitle')}</strong>
+                <p>{t('featAlertsDesc')}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -147,12 +175,12 @@ function Login() {
               <Wind size={22} color="#0c2c17" />
             </div>
 
-            <h2 className="vp-card-title">Welcome back!</h2>
-            <p className="vp-card-subtitle">Sign in to continue.</p>
+            <h2 className="vp-card-title">{t('welcomeTitle')}</h2>
+            <p className="vp-card-subtitle">{t('signInSubtitle')}</p>
 
             <form onSubmit={handleSubmit} className="vp-form-element">
               <div className="vp-field-box">
-                <label>Email address</label>
+                <label>{t('emailLabel')}</label>
                 <div className="vp-input-wrap">
                   <Mail className="vp-field-icon" size={16} />
                   <input
@@ -160,7 +188,7 @@ function Login() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="you@example.com"
+                    placeholder={t('emailPlaceholder')}
                     required
                   />
                 </div>
@@ -168,8 +196,8 @@ function Login() {
 
               <div className="vp-field-box">
                 <div className="vp-label-row">
-                  <label>Password</label>
-                  <a href="#forgot" className="vp-forgot-btn">Forgot password?</a>
+                  <label>{t('passwordLabel')}</label>
+                  <a href="#forgot" className="vp-forgot-btn">{t('forgotPassword')}</a>
                 </div>
                 <div className="vp-input-wrap">
                   <Lock className="vp-field-icon" size={16} />
@@ -178,7 +206,7 @@ function Login() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Enter your password"
+                    placeholder={t('passwordPlaceholder')}
                     required
                   />
                   <button
@@ -195,23 +223,23 @@ function Login() {
               {error && <div className="vp-error-banner">{error}</div>}
 
               <button type="submit" className="vp-submit-btn" disabled={loading}>
-                <span>{loading ? "Signing in..." : "Sign In"}</span>
+                <span>{loading ? (language === 'en' ? "Signing in..." : "साइन इन किया जा रहा है...") : t('signInBtn')}</span>
                 <ArrowRight size={16} />
               </button>
             </form>
 
             <div className="vp-or-divider">
-              <span>or</span>
+              <span>{t('orText')}</span>
             </div>
 
             <div className="vp-switch-prompt">
-              Don't have an account? <Link to="/signup" className="vp-green-link">Create one</Link>
+              {t('noAccountText')} <Link to="/signup" className="vp-green-link">{t('createOne')}</Link>
             </div>
 
             {/* Subtle Security Message */}
             <div className="vp-security-footer">
               <ShieldCheck size={14} color="#16a34a" />
-              <span>Your information is securely protected.</span>
+              <span>{t('secureInfo')}</span>
             </div>
           </div>
         </div>

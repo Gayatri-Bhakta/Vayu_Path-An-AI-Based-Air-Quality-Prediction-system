@@ -1,10 +1,43 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Wind, LogOut, ArrowRight, Activity, Navigation, Bell, Sparkles } from "lucide-react";
+import ForecastChart from "../components/ForecastChart";
+import Navbar from "../components/Navbar";
+import { useLanguage } from "../context/LanguageContext";
+
+const getBand = (aqi) => {
+  if (aqi <= 100) return { label: "Satisfactory", bg: "#dcfce7", color: "#15803d" };
+  if (aqi <= 200) return { label: "Moderate", bg: "#ffedd5", color: "#c2410c" };
+  if (aqi <= 300) return { label: "Poor", bg: "#fee2e2", color: "#991b1b" };
+  return { label: "Severe", bg: "#fca5a5", color: "#7f1d1d" };
+};
+
+const getTranslatedLabel = (label, lang) => {
+  if (lang === 'hi') {
+    if (label === "Satisfactory") return "संतोषजनक";
+    if (label === "Moderate") return "मध्यम";
+    if (label === "Poor") return "खराब";
+    if (label === "Severe") return "गंभीर";
+  }
+  return label;
+};
+
+const defaultForecast = [
+  { horizon: "+1h", time: "Now", aqi: 312 },
+  { horizon: "+6h", time: "12 PM", aqi: 328 },
+  { horizon: "+12h", time: "4 PM", aqi: 301 },
+  { horizon: "+18h", time: "8 PM", aqi: 276 },
+  { horizon: "+24h", time: "12 AM", aqi: 245 },
+  { horizon: "+30h", time: "4 AM", aqi: 212 }
+];
 
 function Home() {
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
   const [user, setUser] = useState(null);
+  const [stationData, setStationData] = useState(null);
+  const [forecast, setForecast] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -17,184 +50,178 @@ function Home() {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+  useEffect(() => {
+    setLoading(true);
+    fetch("http://localhost:8000/api/dashboard/stations")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.stations && data.stations.length > 0) {
+          const primary = data.stations[0]; // Fetch the first live CPCB station
+          setStationData(primary);
+          return fetch(`http://localhost:8000/api/dashboard/forecast?station=${encodeURIComponent(primary.name)}`);
+        }
+      })
+      .then((res) => res ? res.json() : null)
+      .then((data) => {
+        if (data) {
+          setForecast(data.forecast);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error loading live home data:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const currentBand = stationData ? getBand(stationData.aqi) : { label: "Poor", bg: "#fee2e2", color: "#991b1b" };
 
   return (
-    <div className="home-page">
-      {/* Background Animated Ambient Lights */}
-      <div className="ambient-blob blob-1"></div>
-      <div className="ambient-blob blob-2"></div>
-      <div className="ambient-blob blob-3"></div>
-
+    <div className="home-page" style={{ background: "#faf9f6" }}>
       {/* ================= NAVBAR ================= */}
-      <nav className="navbar">
-        <Link to="/home" className="brand">
-          <span className="brand-mark">
-            <Wind size={20} color="#ffffff" />
-          </span>
-          <span className="brand-title">Air Quality Prediction</span>
-        </Link>
-
-        <div className="nav-links">
-          <Link to="/home" className="nav-item active">Home</Link>
-          <Link to="/dashboard" className="nav-item">Dashboard</Link>
-          <Link to="/routes" className="nav-item">Routes</Link>
-          <Link to="/alerts" className="nav-item">Alerts</Link>
-          <Link to="/profile" className="nav-item">Profile</Link>
-
-          <button className="logout-button" onClick={handleLogout}>
-            <LogOut size={14} />
-            Logout ({user?.first_name || "User"})
-          </button>
-        </div>
-      </nav>
+      <Navbar activePage="Home" />
 
       {/* ================= HERO SECTION ================= */}
-      <main>
-        <section className="hero-section">
-          <div className="hero-content">
-            <div className="hero-badge">
+      <main className="hero-section-new">
+
+
+        {/* Content Row: Text + Badges pushed to the right */}
+        <div className="hero-main-layout">
+          <div className="hero-content-right">
+            <div className="hero-badge" style={{ background: "#e2fbe8", color: "#15803d", borderColor: "#86efac" }}>
               <Sparkles size={14} className="badge-sparkle" />
-              <span>AI-POWERED AIR QUALITY INTELLIGENCE</span>
+              <span>{t('homeHeroBadge')}</span>
             </div>
 
-            <h1 className="hero-headline">
-              <span className="text-gradient-emerald">Breathe better.</span>
-              <br />
-              <span className="text-gradient-blue">Move smarter.</span>
+            <h1 className="hero-headline" style={{ fontSize: "64px", lineHeight: "1.1", marginBottom: "20px" }}>
+              {t('homeHeroTitle1')}<br />
+              <span style={{ color: "#0284c7" }}>{t('homeHeroTitle2')}</span>
             </h1>
 
-            <p className="hero-description">
-              Welcome back{user?.first_name ? `, ${user.first_name}` : ""}. Understand air pollution before it affects your day. Access intelligent LSTM forecasts, personalized alerts, and pollution-aware routes.
+            <p className="hero-description" style={{ fontSize: "16px", color: "#475569", marginBottom: "24px" }}>
+              {t('homeWelcome')}{user?.first_name ? `, ${user.first_name}` : ""}. {t('homeOverviewDesc')}
             </p>
 
-            <div className="hero-buttons">
-              <Link to="/dashboard" className="primary-button group">
-                <span>Explore Dashboard</span>
-                <ArrowRight size={16} className="btn-arrow" />
+            <div className="hero-buttons" style={{ marginBottom: "36px" }}>
+              <Link to="/dashboard" className="primary-button" style={{ padding: "14px 28px", borderRadius: "12px", background: "#047857", textDecoration: "none" }}>
+                {t('homeExploreBtn')} <ArrowRight size={16} style={{ marginLeft: "8px" }} />
               </Link>
 
-              <Link to="/routes" className="secondary-button">
-                Find a Safer Route
+              <Link to="/routes" className="secondary-button" style={{ padding: "14px 28px", borderRadius: "12px", background: "#ffffff", border: "1px solid #cbd5e1", textDecoration: "none" }}>
+                {t('homeSaferRouteBtn')}
               </Link>
             </div>
 
-            <div className="hero-trust">
-              <div className="trust-item">
-                <strong>AI</strong>
-                <span>Powered</span>
-              </div>
-              <div className="trust-divider"></div>
-              <div className="trust-item">
-                <strong>24h</strong>
-                <span>Forecasting</span>
-              </div>
-              <div className="trust-divider"></div>
-              <div className="trust-item">
-                <strong>CPCB</strong>
-                <span>Live Data</span>
-              </div>
-            </div>
-          </div>
 
-          <div className="hero-image-wrapper">
-            <div className="hero-card-glow"></div>
-            <div className="hero-image-card">
-              <img
-                src="https://images.unsplash.com/photo-1669089511653-3af3565f6877?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDd8fHxlbnwwfHx8fHw%3D"
-                alt="Delhi Air Quality Visual"
-                className="hero-img"
-              />
-              <div className="image-overlay"></div>
-
-              <div className="image-label">
-                <span className="live-pulse"></span>
-                <span>AIR QUALITY INTELLIGENCE</span>
-              </div>
-
-              {/* Floating Cards with CSS Animation */}
-              <div className="floating-info-card forecast-card float-anim-1">
-                <div className="floating-icon forecast-icon">↗</div>
+            {/* Live Data Overlay at Bottom - Unified Mockup Container */}
+            <div className="hero-bottom-data-card contrast-card" style={{
+              background: "#ffffff",
+              borderRadius: "24px",
+              padding: "24px 28px",
+              boxShadow: "0 10px 40px rgba(15, 23, 42, 0.05)",
+              border: "1.5px solid #cbd5e1",
+              display: "grid",
+              gridTemplateColumns: "1fr 1.6fr",
+              gap: "28px",
+              width: "100%",
+              marginTop: "28px",
+              boxSizing: "border-box"
+            }}>
+              {/* Left Side: Live CPCB Data */}
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div>
-                  <span className="float-tag">AI FORECAST</span>
-                  <strong className="float-val">Next 24 hours</strong>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "11px", fontWeight: "900", color: "#475569", letterSpacing: "1px", textTransform: "uppercase" }}>
+                      {stationData?.shortName || "DELHI"}
+                    </span>
+                    <span style={{ 
+                      color: "#ef4444", 
+                      fontSize: "11px", 
+                      fontWeight: "900", 
+                      letterSpacing: "1px",
+                      textTransform: "uppercase",
+                      display: "inline-flex", 
+                      alignItems: "center", 
+                      gap: "6px" 
+                    }}>
+                      <span className="live-pulse-red"></span>
+                      {t('homeLive')}
+                    </span>
+                  </div>
+                  
+                  <div style={{ fontSize: "13px", color: "#475569", marginTop: "18px", fontWeight: "600" }}>
+                    {t('homeCurrentAqi')}
+                  </div>
+                  
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "4px" }}>
+                    <span style={{ fontSize: "2.6rem", fontWeight: "800", color: "#0f172a", lineHeight: "1" }}>
+                      {stationData?.aqi || 312}
+                    </span>
+                    <span style={{ 
+                      fontSize: "11px", 
+                      fontWeight: "800", 
+                      padding: "4px 12px", 
+                      borderRadius: "100px", 
+                      background: currentBand.bg, 
+                      color: currentBand.color 
+                    }}>
+                      {getTranslatedLabel(currentBand.label, language)}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ 
+                  fontSize: "11px", 
+                  color: "#64748b", 
+                  borderTop: "1px solid #f1f5f9", 
+                  paddingTop: "14px", 
+                  marginTop: "16px",
+                  fontWeight: "600",
+                  whiteSpace: "nowrap",
+                  letterSpacing: "-0.2px"
+                }}>
+                  PM2.5: <strong style={{ color: "#334155" }}>{stationData?.pm25 || 180}</strong> <span style={{ fontSize: "9px", color: "#94a3b8", fontWeight: "normal" }}>µg/m³</span>
+                  <span style={{ color: "#cbd5e1", margin: "0 6px" }}>|</span>
+                  PM10: <strong style={{ color: "#334155" }}>{stationData?.pm10 || 312}</strong> <span style={{ fontSize: "9px", color: "#94a3b8", fontWeight: "normal" }}>µg/m³</span>
+                  <span style={{ color: "#cbd5e1", margin: "0 6px" }}>|</span>
+                  NO₂: <strong style={{ color: "#334155" }}>42</strong> <span style={{ fontSize: "9px", color: "#94a3b8", fontWeight: "normal" }}>ppb</span>
                 </div>
               </div>
 
-              <div className="floating-info-card alert-card float-anim-2">
-                <div className="floating-icon alert-icon">!</div>
-                <div>
-                  <span className="float-tag">SMART ALERTS</span>
-                  <strong className="float-val">Personalized</strong>
+              {/* Right Side: 24-Hour Forecast Chart */}
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "11px", fontWeight: "900", color: "#475569", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "16px", display: "block" }}>
+                  {t('homeForecastChartHeader')}
+                </span>
+                <div style={{ height: "185px", display: "flex", alignItems: "flex-end" }}>
+                  <ForecastChart forecastData={forecast.length > 0 ? forecast : defaultForecast} />
                 </div>
               </div>
             </div>
           </div>
-        </section>
-
-        {/* ================= 4-FEATURE GRID ================= */}
-        <section className="features-section">
-          <div className="feature-grid">
-            <div className="feature-card feature-green">
-              <div className="feature-top">
-                <div className="feature-icon"><Activity size={22} /></div>
-                <span className="feature-number">01</span>
-              </div>
-              <h3>Live AQI Monitoring</h3>
-              <p>Observe live station readings across Delhi with real-time pollutant index calculation.</p>
-              <Link to="/dashboard" className="feature-link">Explore monitoring <span>→</span></Link>
-            </div>
-
-            <div className="feature-card feature-blue">
-              <div className="feature-top">
-                <div className="feature-icon"><Wind size={22} /></div>
-                <span className="feature-number">02</span>
-              </div>
-              <h3>LSTM Forecasting</h3>
-              <p>Predict upcoming air conditions at +1h, +6h, +12h, and +24h time horizons using deep learning.</p>
-              <Link to="/dashboard" className="feature-link">View forecasts <span>→</span></Link>
-            </div>
-
-            <div className="feature-card feature-orange">
-              <div className="feature-top">
-                <div className="feature-icon"><Bell size={22} /></div>
-                <span className="feature-number">03</span>
-              </div>
-              <h3>Personalized Alerts</h3>
-              <p>Receive proactive notifications calibrated to your specific health sensitivity profile.</p>
-              <Link to="/alerts" className="feature-link">Manage alerts <span>→</span></Link>
-            </div>
-
-            <div className="feature-card feature-purple">
-              <div className="feature-top">
-                <div className="feature-icon"><Navigation size={22} /></div>
-                <span className="feature-number">04</span>
-              </div>
-              <h3>OSRM Route Scoring</h3>
-              <p>Compare driving paths scored by interpolated pollution exposure to select the safest commute.</p>
-              <Link to="/routes" className="feature-link">Find safer routes <span>→</span></Link>
-            </div>
-          </div>
-        </section>
+        </div>
       </main>
 
       {/* ================= FOOTER ================= */}
-      <footer className="home-footer">
-        <div className="footer-brand">
-          <span className="brand-mark">
-            <Wind size={16} color="#ffffff" />
-          </span>
-          <div>
-            <strong>Air Quality Prediction</strong>
-            <p>AI-based air quality intelligence & route optimization system.</p>
-          </div>
+      <footer className="home-footer" style={{ 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center",
+        padding: "24px 4%",
+        boxSizing: "border-box",
+        borderTop: "1px solid rgba(226, 232, 240, 0.8)",
+        background: "rgba(250, 249, 246, 0.45)",
+        backdropFilter: "blur(14px)",
+        fontSize: "13px",
+        width: "100%"
+      }}>
+        <div style={{ color: "#475569", fontSize: "13px", fontWeight: "800" }}>
+          {t('homeFootSubtitle')}
         </div>
-        <div className="footer-tech">
-          React 19 • FastAPI • TensorFlow LSTM
+        <div style={{ display: "flex", gap: "16px", color: "#475569", fontSize: "13px", fontWeight: "600", alignItems: "center" }}>
+          <span>{t('homeFootStack')}</span>
+          <span style={{ color: "#cbd5e1" }}>|</span>
+          <span>{t('homeFootCopy')}</span>
         </div>
       </footer>
     </div>

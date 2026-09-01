@@ -1,13 +1,17 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
 
 from database import Base, engine
 from routers.auth import router as auth_router
+from routers.routes import router as routes_router
+from routers.alerts import router as alerts_router
+from routers.feedback import router as feedback_router
 
 # Import Dashboard Services
-from cpcb_service import get_all_stations, get_station_by_id_or_name
-from weather_services import fetch_live_weather
-from LSTM_services import run_lstm_forecast
+from cpcb_service import get_all_stations, get_station_by_id_or_name, update_stations_from_openaq, get_data_source
+from weather_services import fetch_live_weather, fetch_batch_weather
+from LSTM_services import run_lstm_forecast, predict_all_stations
 
 
 # Create database tables
@@ -31,6 +35,15 @@ app.add_middleware(
 
 # Include existing authentication router
 app.include_router(auth_router)
+app.include_router(routes_router, prefix="/api")
+app.include_router(alerts_router, prefix="/api")
+app.include_router(feedback_router, prefix="/api")
+
+
+@app.on_event("startup")
+async def startup_event():
+    # Trigger initial OpenAQ update on startup so the data is cached immediately
+    asyncio.create_task(update_stations_from_openaq())
 
 
 # Root check
@@ -46,9 +59,16 @@ def root():
 # =========================================================
 
 @app.get("/api/dashboard/stations")
-def list_stations():
+async def list_stations():
     """Returns the list of all Delhi monitoring stations with coordinates and base AQI."""
-    return {"stations": get_all_stations()}
+    asyncio.create_task(update_stations_from_openaq())
+    stations_list = get_all_stations()
+    await predict_all_stations(stations_list)
+    await fetch_batch_weather(stations_list)
+    return {
+        "stations": stations_list,
+        "dataSource": get_data_source()
+    }
 
 
 @app.get("/api/dashboard/weather")
@@ -63,12 +83,14 @@ async def get_station_forecast(station: str = Query("Alipur, Delhi - DPCC")):
     Fetches weather and runs the trained LSTM model (+1h, +6h, +12h, +24h)
     for the selected monitoring station.
     """
+    asyncio.create_task(update_stations_from_openaq())
     st_data = get_station_by_id_or_name(station)
     weather = await fetch_live_weather(st_data["lat"], st_data["lng"])
-    forecast = run_lstm_forecast(st_data["name"], st_data)
+    forecast = await run_lstm_forecast(st_data["name"], st_data)
     
     return {
         "station": st_data,
         "weather": weather,
-        "forecast": forecast
+        "forecast": forecast,
+        "dataSource": get_data_source()
     }

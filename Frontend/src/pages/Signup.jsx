@@ -13,10 +13,12 @@ import {
   Navigation,
   Wind
 } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext.jsx";
 import delhiMetroBg from "../assets/delhi-metro.png";
 
 function Signup() {
   const navigate = useNavigate();
+  const { t, toggleLanguage, language } = useLanguage();
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -32,6 +34,7 @@ function Signup() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -46,17 +49,17 @@ function Signup() {
     setSuccess("");
 
     if (!agreed) {
-      setError("Please agree to the Terms of Service and Privacy Policy.");
+      setError(language === 'en' ? "Please agree to the Terms of Service and Privacy Policy." : "कृपया सेवा की शर्तों और गोपनीयता नीति से सहमत हों।");
       return;
     }
 
     if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError(language === 'en' ? "Password must be at least 8 characters long." : "पासवर्ड कम से कम 8 वर्णों का होना चाहिए।");
       return;
     }
 
     if (formData.password !== formData.confirm_password) {
-      setError("Passwords do not match.");
+      setError(language === 'en' ? "Passwords do not match." : "पासवर्ड मेल नहीं खाते हैं।");
       return;
     }
 
@@ -77,7 +80,7 @@ function Signup() {
         return;
       }
 
-      setSuccess("Account created successfully! Redirecting to login...");
+      setSuccess(language === 'en' ? "Account created successfully! Redirecting to login..." : "खाता सफलतापूर्वक बन गया! लॉगिन पर पुनर्निर्देशित किया जा रहा है...");
       setLoading(false);
 
       setTimeout(() => {
@@ -96,26 +99,37 @@ function Signup() {
     >
       <div className="vp-auth-overlay" />
 
+      {/* Glassmorphic Top Auth Header */}
+      <header className="vp-auth-header">
+        <div className="vp-auth-header-brand">
+          <div className="vp-auth-header-icon">
+            <Wind size={18} />
+          </div>
+          <span className="vp-auth-header-title">{t('logoTitle')}</span>
+        </div>
+        <div className="vp-auth-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <button className="vp-lang-toggle" onClick={toggleLanguage} title="Change Language / भाषा बदलें">
+            {language === 'en' ? 'हिन्दी' : 'English'}
+          </button>
+          <div className="vp-auth-header-status">
+            <span className="vp-status-dot" />
+            <span>{t('sysStatus')}</span>
+          </div>
+        </div>
+      </header>
+
       <div className="vp-auth-container">
         {/* LEFT COLUMN: SHORTENED PRODUCT BENEFITS */}
         <div className="vp-left-col">
-          {/* Brand Badge */}
-          <div className="vp-brand-pill">
-            <div className="vp-brand-icon">
-              <Wind size={18} color="#16a34a" />
-            </div>
-            <span className="vp-brand-text">Air Quality Prediction</span>
-          </div>
-
           {/* Headline */}
           <div className="vp-hero-text">
             <h1>
-              Join us for a <br/>
-              Cleaner, Healthier <span className="vp-green-accent">Tomorrow.</span>
+              {t('signupHeroTitle1')} <br/>
+              <span style={{ whiteSpace: "nowrap" }}>{t('signupHeroTitle2')}</span> <span className="vp-green-accent">{t('signupHeroTitle3')}</span>
             </h1>
             
             <p>
-              Get personalized air-quality alerts and routes based on your needs.
+              {t('signupHeroDesc')}
             </p>
           </div>
 
@@ -123,31 +137,31 @@ function Signup() {
           <div className="vp-feature-card-stack">
             <div className="vp-white-pill-card">
               <div className="vp-pill-icon-circle">
-                <TrendingUp size={18} color="#16a34a" />
+                <TrendingUp size={20} />
               </div>
               <div className="vp-pill-card-text">
-                <strong>Real-Time Air Quality</strong>
-                <p>High-resolution forecasts up to 24 hours ahead</p>
+                <strong>{t('featLiveTitle')}</strong>
+                <p>{t('featLiveDesc')}</p>
               </div>
             </div>
 
             <div className="vp-white-pill-card">
               <div className="vp-pill-icon-circle">
-                <Bell size={18} color="#16a34a" />
+                <Bell size={20} />
               </div>
               <div className="vp-pill-card-text">
-                <strong>Personalized Alerts</strong>
-                <p>Alerts tailored to your sensitivity and preferences</p>
+                <strong>{t('featPersonalAlertsTitle')}</strong>
+                <p>{t('featPersonalAlertsDesc')}</p>
               </div>
             </div>
 
             <div className="vp-white-pill-card">
               <div className="vp-pill-icon-circle">
-                <Navigation size={18} color="#16a34a" />
+                <Navigation size={20} />
               </div>
               <div className="vp-pill-card-text">
-                <strong>Smart Route Optimization</strong>
-                <p>Routes optimized to reduce pollution exposure</p>
+                <strong>{t('featSmartRouteTitle')}</strong>
+                <p>{t('featSmartRouteDesc')}</p>
               </div>
             </div>
           </div>
@@ -160,13 +174,13 @@ function Signup() {
               <User size={22} color="#16a34a" />
             </div>
 
-            <h2 className="vp-card-title">Create Your Account</h2>
-            <p className="vp-card-subtitle">Let's get you started</p>
+            <h2 className="vp-card-title">{t('createAccountTitle')}</h2>
+            <p className="vp-card-subtitle">{t('getStartedSubtitle')}</p>
 
             <form onSubmit={handleSubmit} className="vp-form-element">
               <div className="vp-grid-2">
                 <div className="vp-field-box">
-                  <label>First name</label>
+                  <label>{t('firstNameLabel')}</label>
                   <div className="vp-input-wrap">
                     <User className="vp-field-icon" size={15} />
                     <input
@@ -174,14 +188,14 @@ function Signup() {
                       name="first_name"
                       value={formData.first_name}
                       onChange={handleChange}
-                      placeholder="First name"
+                      placeholder={t('firstNamePlaceholder')}
                       required
                     />
                   </div>
                 </div>
 
                 <div className="vp-field-box">
-                  <label>Last name</label>
+                  <label>{t('lastNameLabel')}</label>
                   <div className="vp-input-wrap">
                     <User className="vp-field-icon" size={15} />
                     <input
@@ -189,7 +203,7 @@ function Signup() {
                       name="last_name"
                       value={formData.last_name}
                       onChange={handleChange}
-                      placeholder="Last name"
+                      placeholder={t('lastNamePlaceholder')}
                       required
                     />
                   </div>
@@ -197,7 +211,7 @@ function Signup() {
               </div>
 
               <div className="vp-field-box">
-                <label>Email address</label>
+                <label>{t('emailLabel')}</label>
                 <div className="vp-input-wrap">
                   <Mail className="vp-field-icon" size={15} />
                   <input
@@ -205,14 +219,14 @@ function Signup() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="you@example.com"
+                    placeholder={t('emailPlaceholder')}
                     required
                   />
                 </div>
               </div>
 
               <div className="vp-field-box">
-                <label>Password</label>
+                <label>{t('passwordLabel')}</label>
                 <div className="vp-input-wrap">
                   <Lock className="vp-field-icon" size={15} />
                   <input
@@ -220,7 +234,9 @@ function Signup() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Create a password"
+                    onFocus={() => setIsPasswordFocused(true)}
+                    onBlur={() => setIsPasswordFocused(false)}
+                    placeholder={language === 'en' ? "Create a password" : "पासवर्ड बनाएं"}
                     required
                   />
                   <button
@@ -235,7 +251,7 @@ function Signup() {
               </div>
 
               <div className="vp-field-box">
-                <label>Confirm Password</label>
+                <label>{t('confirmPasswordLabel')}</label>
                 <div className="vp-input-wrap">
                   <Lock className="vp-field-icon" size={15} />
                   <input
@@ -243,7 +259,7 @@ function Signup() {
                     name="confirm_password"
                     value={formData.confirm_password}
                     onChange={handleChange}
-                    placeholder="Confirm your password"
+                    placeholder={t('confirmPasswordPlaceholder')}
                     required
                   />
                   <button
@@ -255,7 +271,11 @@ function Signup() {
                     {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
-                <span className="vp-field-hint">Use 8+ characters with a number and symbol.</span>
+                {isPasswordFocused && (
+                  <span className="vp-field-hint">
+                    {language === 'en' ? "Use 8+ characters with a number and symbol." : "संख्या और प्रतीक के साथ 8+ वर्णों का उपयोग करें।"}
+                  </span>
+                )}
               </div>
 
               <div className="vp-terms-row">
@@ -266,7 +286,11 @@ function Signup() {
                   onChange={(e) => setAgreed(e.target.checked)}
                 />
                 <label htmlFor="vp-terms">
-                  I agree to the <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>
+                  {language === 'en' ? (
+                    <>I agree to the <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a></>
+                  ) : (
+                    <>मैं <a href="#terms">सेवा की शर्तों</a> और <a href="#privacy">गोपनीयता नीति</a> से सहमत हूँ</>
+                  )}
                 </label>
               </div>
 
@@ -274,23 +298,23 @@ function Signup() {
               {success && <div className="vp-success-banner">{success}</div>}
 
               <button type="submit" className="vp-submit-btn" disabled={loading}>
-                <span>{loading ? "Creating Account..." : "Create Account"}</span>
+                <span>{loading ? (language === 'en' ? "Creating Account..." : "खाता बनाया जा रहा है...") : t('createAccountBtn')}</span>
                 <ArrowRight size={16} />
               </button>
             </form>
 
             <div className="vp-or-divider">
-              <span>or</span>
+              <span>{t('orText')}</span>
             </div>
 
             <div className="vp-switch-prompt">
-              Already have an account? <Link to="/login" className="vp-green-link">Sign in</Link>
+              {t('alreadyHaveAccount')} <Link to="/login" className="vp-green-link">{t('signInLink')}</Link>
             </div>
 
             {/* Subtle Security Line */}
             <div className="vp-security-footer">
               <ShieldCheck size={14} color="#16a34a" />
-              <span>Your data is encrypted and securely stored.</span>
+              <span>{t('dataEncrypted')}</span>
             </div>
           </div>
         </div>
