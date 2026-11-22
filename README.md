@@ -1,4 +1,4 @@
-﻿# 🌿 Vayu Path – AI-Powered Air Quality Intelligence & Route Optimization
+# 🌿 Vayu Path – AI-Powered Air Quality Intelligence & Route Optimization
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -45,6 +45,45 @@ An end-to-end intelligent environmental intelligence platform that combines **re
 * **🌐 Full Bilingual Translation (English & Hindi):** Seamless, dictionary-driven React context engine translating all typography, labels, validations, alerts, and navigation links.
 * **🌓 Premium Dark/Light Theme Engine:** Adaptive styling with smooth cubic-bezier transitions (`0.4s ease`) and high-contrast color palettes for comfortable day/night usage.
 * **⚡ Ultra-Low Latency Caching:** 15-minute in-memory caching for live weather and inference pipelines, cutting station loading times down to $<50\text{ms}$.
+
+
+---
+
+## Screenshots
+
+### Landing Page
+![Landing Page](screenshots/01_landing.png)
+
+---
+
+### Register Page
+![Register Page](screenshots/02_register.png)
+
+---
+
+### Login Page
+![Login Page](screenshots/03_login.png)
+
+---
+
+### Home Page
+![Home Page](screenshots/04_home.png)
+
+---
+
+### Route Advisory
+![Route Advisory](screenshots/05_routes.png)
+
+---
+
+### Live Dashboard
+![Live Dashboard](screenshots/06_Dashborad.png)
+
+---
+
+### Alerts and Radar Sweep
+![Alerts](screenshots/07_Alerts%20.png)
+
 
 ---
 
