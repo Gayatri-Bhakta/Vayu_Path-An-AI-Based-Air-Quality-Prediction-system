@@ -27,7 +27,9 @@ export default function ProfilePage() {
   const [healthProfile, setHealthProfile] = useState({
     sensitivity: "general",
     aqi_threshold: 150,
-    alerts_enabled: true
+    alerts_enabled: true,
+    mask_advisory: true,
+    limit_outdoor_exercise: true
   });
 
   // Stats
@@ -109,7 +111,10 @@ export default function ProfilePage() {
         }
         
         if (healthData && !healthData.detail) {
-          setHealthProfile(healthData);
+          setHealthProfile(prev => ({
+            ...prev,
+            ...healthData
+          }));
         }
 
         if (Array.isArray(historyData)) {
@@ -129,7 +134,6 @@ export default function ProfilePage() {
     setAccountSuccess("");
     setAccountError("");
     
-    // Check password matches if trying to change it
     if (account.password || account.confirm_password) {
       if (account.password !== account.confirm_password) {
         setAccountError(language === 'en' ? "Passwords do not match." : "पासवर्ड मेल नहीं खाते हैं।");
@@ -166,10 +170,8 @@ export default function ProfilePage() {
         } else {
           setAccountSuccess(language === 'en' ? "Account updated successfully." : "खाता विवरण सफलतापूर्वक सहेजा गया।");
           
-          // Clear password fields
           setAccount(prev => ({ ...prev, password: "", confirm_password: "" }));
           
-          // Update local storage user details
           const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
           localStorage.setItem("user", JSON.stringify({
             ...storedUser,
@@ -450,7 +452,8 @@ export default function ProfilePage() {
 
               </form>
             </div>
-             <div className="contrast-card" style={{
+
+            <div className="contrast-card" style={{
               background: "var(--card-bg)",
               borderRadius: "24px",
               padding: "24px",
@@ -506,7 +509,6 @@ export default function ProfilePage() {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {/* Language selection dropdown */}
                 <div>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: "800", color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "6px" }}>
                     {language === 'en' ? "Language Preference" : "भाषा वरीयता"}
@@ -517,7 +519,7 @@ export default function ProfilePage() {
                     border: "1px solid var(--border-color)", 
                     borderRadius: "10px", 
                     padding: "8px 12px", 
-                    background: "var(--card-bg)",
+                    background: "var(--card-bg)", 
                     width: "100%",
                     boxSizing: "border-box"
                   }}>
@@ -540,7 +542,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Theme Selector */}
                 <div>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: "800", color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "6px" }}>
                     {language === 'en' ? "Display Theme" : "प्रदर्शित थीम"}
@@ -551,7 +552,7 @@ export default function ProfilePage() {
                     border: "1px solid var(--border-color)", 
                     borderRadius: "10px", 
                     padding: "8px 12px", 
-                    background: "var(--card-bg)",
+                    background: "var(--card-bg)", 
                     width: "100%",
                     boxSizing: "border-box"
                   }}>
@@ -669,6 +670,35 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
+                {/* Dynamic Exposure Guidance Box */}
+                <div style={{ 
+                  background: "var(--bg-color)", 
+                  border: "1px solid var(--border-color)", 
+                  borderRadius: "14px", 
+                  padding: "14px 16px" 
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                    <Wind size={15} color="#0284c7" />
+                    <span style={{ fontSize: "12px", fontWeight: "800", color: "var(--text-primary)" }}>
+                      {language === 'en' ? "Active Safety Advisory" : "सक्रिय सुरक्षा सलाह"}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary)", lineHeight: "1.45" }}>
+                    {healthProfile.aqi_threshold <= 80 
+                      ? (language === 'en' 
+                          ? "High protection mode: route calculations strictly prioritize clean corridors and minimize outdoor prolonged transit." 
+                          : "उच्च सुरक्षा मोड: मार्ग गणना स्वच्छ गलियारों को प्राथमिकता देती है और बाहरी पारगमन को कम करती है।")
+                      : healthProfile.aqi_threshold <= 120
+                      ? (language === 'en' 
+                          ? "Moderate sensitivity: alerts prioritize peak transit pollution avoidance." 
+                          : "मध्यम संवेदनशीलता: अलर्ट व्यस्त समय के प्रदूषण से बचाव को प्राथमिकता देते हैं।")
+                      : (language === 'en' 
+                          ? "Standard CPCB monitoring: alerts trigger only on severe air quality spikes along planned paths." 
+                          : "मानक सीपीसीबी निगरानी: योजनाबद्ध मार्गों पर केवल गंभीर वायु गुणवत्ता वृद्धि पर अलर्ट ट्रिगर होते हैं।")
+                    }
+                  </p>
+                </div>
+
                 {/* System Notifications Enable */}
                 <div style={{ 
                   background: "var(--bg-color)", 
@@ -677,8 +707,7 @@ export default function ProfilePage() {
                   padding: "16px",
                   display: "flex",
                   alignItems: "flex-start",
-                  gap: "12px",
-                  marginTop: "8px"
+                  gap: "12px"
                 }}>
                   <input 
                     type="checkbox"
@@ -693,8 +722,68 @@ export default function ProfilePage() {
                     </label>
                     <span style={{ display: "block", fontSize: "11px", color: "var(--text-secondary)", marginTop: "3px", lineHeight: "1.4" }}>
                       {language === 'en' 
-                        ? "Triggers web browser notifications dynamically when forecasting values exceed your personalized threshold levels." 
-                        : "पूर्वानुमान मान आपकी व्यक्तिगत सीमा स्तरों से अधिक होने पर डाइनैमिक रूप से वेब ब्राउज़र सूचनाओं को सक्रिय करता है।"
+                        ? "Triggers dynamic browser notifications when forecasting values exceed your personalized threshold levels." 
+                        : "पूर्वानुमान मान आपकी व्यक्तिगत सीमा स्तरों से अधिक होने पर डाइनैमिक रूप से सूचनाओं को सक्रिय करता है।"
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mask & Gear Advisory Option */}
+                <div style={{ 
+                  background: "var(--bg-color)", 
+                  border: "1px solid var(--border-color)", 
+                  borderRadius: "14px", 
+                  padding: "16px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "12px"
+                }}>
+                  <input 
+                    type="checkbox"
+                    id="mask_advisory_prof"
+                    checked={healthProfile.mask_advisory ?? true}
+                    onChange={(e) => setHealthProfile(prev => ({ ...prev, mask_advisory: e.target.checked }))}
+                    style={{ marginTop: "4px" }}
+                  />
+                  <div>
+                    <label htmlFor="mask_advisory_prof" style={{ display: "block", fontSize: "13px", fontWeight: "800", color: "var(--text-primary)", cursor: "pointer" }}>
+                      {language === 'en' ? "Route N95 mask suggestions" : "मार्ग N95 मास्क सुझाव"}
+                    </label>
+                    <span style={{ display: "block", fontSize: "11px", color: "var(--text-secondary)", marginTop: "3px", lineHeight: "1.4" }}>
+                      {language === 'en' 
+                        ? "Display respirator recommendations alongside navigation directions if transit passes through severe pollution zones." 
+                        : "यदि पारगमन गंभीर प्रदूषण क्षेत्रों से गुजरता है तो नेविगेशन निर्देशों के साथ श्वासयंत्र की सिफारिशें प्रदर्शित करें।"
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                {/* Outdoor Activity Caution Option */}
+                <div style={{ 
+                  background: "var(--bg-color)", 
+                  border: "1px solid var(--border-color)", 
+                  borderRadius: "14px", 
+                  padding: "16px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "12px"
+                }}>
+                  <input 
+                    type="checkbox"
+                    id="outdoor_limit_prof"
+                    checked={healthProfile.limit_outdoor_exercise ?? true}
+                    onChange={(e) => setHealthProfile(prev => ({ ...prev, limit_outdoor_exercise: e.target.checked }))}
+                    style={{ marginTop: "4px" }}
+                  />
+                  <div>
+                    <label htmlFor="outdoor_limit_prof" style={{ display: "block", fontSize: "13px", fontWeight: "800", color: "var(--text-primary)", cursor: "pointer" }}>
+                      {language === 'en' ? "Outdoor activity cautions" : "बाहरी गतिविधि सावधानियां"}
+                    </label>
+                    <span style={{ display: "block", fontSize: "11px", color: "var(--text-secondary)", marginTop: "3px", lineHeight: "1.4" }}>
+                      {language === 'en' 
+                        ? "Warn against strenuous exercise and long walking commutes when local AQI exceeds your preset boundary." 
+                        : "स्थानीय AQI आपकी पूर्व निर्धारित सीमा से अधिक होने पर कठिन व्यायाम और लंबे पैदल सफर के प्रति सचेत करें।"
                       }
                     </span>
                   </div>
